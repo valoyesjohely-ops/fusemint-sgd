@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Angular
+/dist
+/tmp
+/out-tsc
+/bazel-out
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Uploads
+uploads/
+files/
+
+# Build
+build/
+dist/
+lib/
