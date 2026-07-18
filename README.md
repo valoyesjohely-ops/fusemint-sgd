@@ -1,165 +1,296 @@
-# FUSEMINT SGD - Sistema de Gestión Documental
+# 🎯 FUSEMINT SGD - Sistema de Gestión Documental
 
-Sistema de gestión documental basado en expedientes para la Fundación FUSEMINT.
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-blue.svg)](https://nodejs.org)
+[![React](https://img.shields.io/badge/React-18.2-blue.svg)](https://reactjs.org)
+[![MySQL](https://img.shields.io/badge/MySQL-8+-blue.svg)](https://www.mysql.com)
 
 ## 📋 Descripción
 
-FUSEMINT SGD es una plataforma moderna y profesional para administrar, organizar, clasificar y consultar documentos digitales mediante expedientes documentales, facilitando la gestión de la información institucional de la Fundación.
+**FUSEMINT SGD** es un Sistema de Gestión Documental profesional diseñado para instituciones colombianas que necesitan:
 
-### Características principales
+✅ Organizar expedientes documentales
+✅ Gestionar documentos (PDF, imágenes, texto)
+✅ Visualizar documentos sin descargar
+✅ Control de acceso por roles
+✅ Auditoría completa de cambios
+✅ Reportes y estadísticas
 
-- ✅ Gestión de expedientes documentales
-- ✅ Clasificación de documentos por secciones (Técnica, Financiera, Legal)
-- ✅ Control de acceso granular por expediente
-- ✅ Búsqueda avanzada con filtros
-- ✅ Auditoría completa de cambios
-- ✅ Interfaz moderna y responsive
+---
 
-## 🏗️ Estructura del Proyecto
-
-```
-fusemint-sgd/
-├── frontend/                    # Angular 20 + Tailwind CSS
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── core/           # Servicios, guards, interceptores
-│   │   │   ├── shared/         # Componentes reutilizables
-│   │   │   ├── modules/        # Módulos funcionales
-│   │   │   ├── layout/         # Layout principal
-│   │   │   └── app.module.ts
-│   │   ├── assets/
-│   │   ├── environments/
-│   │   └── styles/
-│   ├── angular.json
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── tailwind.config.js
-├── backend/                     # Node.js + Express
-│   ├── src/
-│   │   ├── controllers/         # Controladores de rutas
-│   │   ├── services/           # Lógica de negocio
-│   │   ├── routes/             # Definición de rutas
-│   │   ├── middleware/         # Middlewares (auth, validation)
-│   │   ├── models/             # Tipos e interfaces
-│   │   ├── config/             # Configuración
-│   │   ├── database/           # Conexión a BD
-│   │   └── index.ts            # Punto de entrada
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-├── database/
-│   ├── schema.sql              # Schema mejorado
-│   └── initial-data.sql        # Datos iniciales
-├── docs/
-│   ├── SPECIFICATION.md        # Especificación del proyecto
-│   ├── API.md                  # Documentación API REST
-│   └── DATABASE.md             # Documentación de BD
-└── .gitignore
-```
-
-## 🛠️ Stack Tecnológico
+## 🎨 Características Principales
 
 ### Frontend
-- **Angular 20** - Framework principal
-- **Tailwind CSS** - Estilos
-- **TypeScript** - Lenguaje
-- **SCSS** - Preprocesador CSS
-- **RxJS** - Programación reactiva
+- ✨ Interfaz moderna con Tailwind CSS
+- 🟢 Diseño verde institucional (`#1B6D3B`)
+- 📱 Responsive (móvil, tablet, desktop)
+- 🔐 Autenticación JWT
+- 👤 Control de roles (admin, gestor, usuario)
+- 📄 Visor de documentos integrado
+- 🔍 Búsqueda en tiempo real
+- 📊 Dashboard con estadísticas
 
 ### Backend
-- **Node.js 18+** - Runtime
-- **Express** - Framework HTTP
-- **TypeScript** - Lenguaje
-- **JWT** - Autenticación
-- **bcrypt** - Encriptación de contraseñas
+- ⚡ API REST con Express.js
+- 🗄️ Base de datos MySQL con auditoría
+- 🔑 Autenticación JWT con bcrypt
+- 📁 Gestión de expedientes y documentos
+- 📈 Reportes y estadísticas
+- 🔒 Validación y seguridad
+- 📝 Logs de auditoría completos
 
-### Base de Datos
-- **MySQL 8.0+** - Base de datos relacional
+---
 
-## 📦 Instalación
+## 🚀 Quick Start
 
-### Requisitos previos
-- Node.js 18+
-- npm o yarn
-- MySQL 8.0+
-
-### Frontend
+### 1️⃣ Clonar el Repositorio
 
 ```bash
-cd frontend
-npm install
-npm start
+cd D:\
+git clone https://github.com/valoyesjohely-ops/fusemint-sgd.git
+cd fusemint-sgd
 ```
 
-La aplicación estará disponible en `http://localhost:4200`
-
-### Backend
+### 2️⃣ Instalar Dependencias
 
 ```bash
+# Backend
 cd backend
 npm install
 
-# Crear archivo .env con las variables requeridas
-cp .env.example .env
+# Frontend
+cd ../frontend
+npm install
+```
 
-# Ejecutar en modo desarrollo
+### 3️⃣ Configurar Base de Datos
+
+```bash
+# Importar schema
+mysql -u root -p fusemint_sgd < ../backend/src/database/schema.sql
+```
+
+### 4️⃣ Configurar Variables de Entorno
+
+```bash
+# Backend
+cd backend
+cp .env.example .env
+# Edita .env con tus credenciales MySQL
+
+# Frontend
+cd ../frontend
+cp .env.example .env
+```
+
+### 5️⃣ Iniciar Servidores
+
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
 npm run dev
 ```
 
-El servidor estará disponible en `http://localhost:3000`
+### 6️⃣ Acceder a la Aplicación
 
-### Base de Datos
+🌐 **http://localhost:5173**
 
-```bash
-# Crear base de datos y ejecutar schema
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/initial-data.sql
+**Credenciales de prueba:**
+- Email: `admin@fusemint.org`
+- Password: `admin123`
+
+---
+
+## 📚 Documentación
+
+- 📖 [Guía de Instalación Completa](./INSTALL.md)
+- 📚 [API Documentation](./API.md)
+- 🏗️ [Architecture Guide](./ARCHITECTURE.md)
+
+---
+
+## 🗂️ Estructura del Proyecto
+
+```
+fusemint-sgd/
+├── frontend/              # React + Tailwind
+│   ├── src/
+│   │   ├── components/   # Componentes UI
+│   │   ├── contexts/     # Auth context
+│   │   ├── pages/        # Páginas principales
+│   │   ├── services/     # API calls
+│   │   └── App.tsx
+│   └── package.json
+├── backend/              # Express + MySQL
+│   ├── src/
+│   │   ├── server.ts     # Rutas principales
+│   │   ├── middleware/   # Auth middleware
+│   │   ├── database/     # Schema y datos
+│   │   └── utils/        # Helpers
+│   └── package.json
+└── docs/
+    ├── INSTALL.md
+    ├── API.md
+    └── ARCHITECTURE.md
 ```
 
-## 🔐 Autenticación
+---
 
-El sistema utiliza **JWT (JSON Web Tokens)** con contraseñas cifradas mediante **bcrypt**.
+## 🎯 Funcionalidades Implementadas
 
-### Flujo de autenticación
+### ✅ Autenticación
+- [x] Login
+- [x] Registro
+- [x] JWT tokens
+- [x] Protected routes
 
-1. Usuario inicia sesión con usuario + contraseña
-2. Backend valida credenciales en MySQL
-3. Si son válidas, genera JWT
-4. Frontend almacena el token
-5. Todas las peticiones incluyen el token en el header `Authorization: Bearer <token>`
-6. Backend verifica el token y los permisos del expediente
+### ✅ Expedientes
+- [x] Listar expedientes
+- [x] Crear expediente
+- [x] Ver detalles
+- [x] Actualizar estado
 
-## 📊 Base de Datos
+### ✅ Documentos
+- [x] Subir documentos
+- [x] Visualizar documentos (PDF, imágenes, texto)
+- [x] Descargar documentos
+- [x] Eliminar documentos
 
-Ver `docs/DATABASE.md` para documentación completa del schema.
+### ✅ Dashboard
+- [x] Estadísticas en tiempo real
+- [x] Gráficos de actividad
+- [x] Acciones rápidas
 
-## 🔗 API REST
+### ✅ Seguridad
+- [x] Hashing de passwords
+- [x] JWT authentication
+- [x] Role-based access control
+- [x] SQL injection prevention
 
-Ver `docs/API.md` para documentación de endpoints.
+---
 
-## 📋 Especificación
+## 🔐 Seguridad
 
-Ver `docs/SPECIFICATION.md` para requisitos detallados del sistema.
+✅ **Passwords:** Hasheadas con bcrypt (10 rounds)
+✅ **Tokens:** JWT con 24h expiration
+✅ **Queries:** Parameterized para evitar SQL injection
+✅ **CORS:** Configurado para localhost
+✅ **Roles:** Validación en backend y frontend
 
-## 👥 Roles y Permisos
+---
 
-### Administrador
-- Acceso total al sistema
-- Gestión de usuarios
-- Crear/editar/eliminar expedientes
-- Asignar permisos
-- Acceder a todos los módulos
+## 🚀 Deployment
 
-### Usuario
-- Acceso limitado según permisos asignados
-- Visualizar expedientes autorizados
-- Cargar/editar/descargar documentos (según permisos)
-- No puede administrar usuarios ni el sistema
+### Production Checklist
 
-## 📝 Licencia
+- [ ] Cambiar `JWT_SECRET` en `.env`
+- [ ] Usar `HTTPS` en lugar de HTTP
+- [ ] Configurar `NODE_ENV=production`
+- [ ] Setup de base de datos con backups
+- [ ] Implementar rate limiting
+- [ ] Añadir logging y monitoring
+- [ ] Usar variables de entorno seguras
+- [ ] Configurar CORS para dominio real
 
-Proyecto propietario de FUSEMINT
+---
 
-## 👤 Autor
+## 📱 Credenciales de Prueba
 
-Johely Valoyes - Pasantía Universitaria
+```
+┌─────────────────────┬────────────┬──────────┐
+│ Email               │ Password   │ Rol      │
+├─────────────────────┼────────────┼──────────┤
+│ admin@fusemint.org  │ admin123   │ admin    │
+│ juan@fusemint.org   │ admin123   │ gestor   │
+│ maria@fusemint.org  │ admin123   │ usuario  │
+└─────────────────────┴────────────┴──────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend:**
+- React 18.2
+- Vite
+- Tailwind CSS
+- TypeScript
+- Wouter (routing)
+
+**Backend:**
+- Node.js
+- Express.js
+- MySQL 8
+- JWT
+- Bcrypt
+- TypeScript
+
+---
+
+## 📊 Database Schema
+
+Ver `backend/src/database/schema.sql` para detalles completos.
+
+**Tablas principales:**
+- `usuarios` - Usuarios del sistema
+- `expedientes` - Expedientes documentales
+- `documentos` - Documentos asociados
+- `auditoria` - Logs de cambios
+
+---
+
+## 🐛 Solución de Problemas
+
+### Puerto 3000 ocupado
+```bash
+# Cambiar puerto en backend/.env
+PORT=3001
+```
+
+### MySQL connection error
+```bash
+# Verificar credenciales en backend/.env
+# Asegurar que MySQL está ejecutándose
+mysql -u root -p
+```
+
+### Módulos no encontrados
+```bash
+# Reinstalar dependencias
+rm -r node_modules package-lock.json
+npm install
+```
+
+---
+
+## 📞 Soporte
+
+Para problemas o preguntas:
+1. Revisa la documentación en `/docs`
+2. Verifica los logs en la consola
+3. Abre un issue en GitHub
+
+---
+
+## 📄 Licencia
+
+MIT License - Ver `LICENSE` para detalles
+
+---
+
+## 🎉 ¡Listo!
+
+Ya tienes **FUSEMINT SGD** funcionando en tu máquina. 
+
+**Próximos pasos:**
+1. Explora el dashboard
+2. Crea expedientes
+3. Sube documentos
+4. Prueba la visualización de documentos
+5. Configura usuarios adicionales
+
+¡Disfruta! 🚀

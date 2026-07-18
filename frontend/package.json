@@ -1,0 +1,33 @@
+{
+  "name": "fusemint-sgd-frontend",
+  "version": "1.0.0",
+  "description": "FUSEMINT - Sistema de Gestión Documental Frontend",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/**/*.{ts,tsx}"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "wouter": "^3.0.0",
+    "lucide-react": "^0.263.1",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-accordion": "^1.0.4",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-avatar": "^1.0.4",
+    "class-variance-authority": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@vitejs/plugin-react-swc": "^3.3.2",
+    "typescript": "^5.1.6",
+    "vite": "^4.3.9",
+    "tailwindcss": "^3.3.2",
+    "postcss": "^8.4.24",
+    "autoprefixer": "^10.4.14"
+  }
+}
