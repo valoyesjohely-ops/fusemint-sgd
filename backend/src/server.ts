@@ -67,17 +67,18 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.post('/api/auth/login', authRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, username, identifier, password } = req.body;
-    const providedIdentifiers = [identifier, username, email]
-      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-      .map((value) => value.trim());
-    const uniqueIdentifiers = Array.from(new Set(providedIdentifiers));
-    const loginIdentifier = (identifier || username || email || '').trim();
+    const normalizedIdentifier = typeof identifier === 'string' ? identifier.trim() : '';
+    const normalizedUsername = typeof username === 'string' ? username.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+    const providedIdentifierValues = [normalizedIdentifier, normalizedUsername, normalizedEmail]
+      .filter((value) => value.length > 0);
+    const loginIdentifier = providedIdentifierValues[0] || '';
 
     if (!loginIdentifier || !password) {
       return res.status(400).json({ error: 'Debe enviar usuario/correo y contraseña' });
     }
 
-    if (uniqueIdentifiers.length > 1) {
+    if (providedIdentifierValues.length > 1) {
       return res.status(400).json({ error: 'Use un único identificador de acceso' });
     }
 
