@@ -88,20 +88,23 @@ const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   return next();
 };
 
-const catalogTableByType: Record<string, string> = {
-  'grupos-documentales': 'grupos_documentales',
-  'tipos-operacion': 'tipos_operacion',
-  'tipos-cliente': 'tipos_cliente',
-  'tipos-documentales': 'tipos_documentales',
-  secciones: 'secciones',
-};
-
 const sanitizePathSegment = (value: string) =>
   value
     .toLowerCase()
     .replace(/[^a-z0-9-_]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '') || 'general';
+
+const ensureSafePath = (targetPath: string): string | null => {
+  const normalizedRoot = path.resolve(UPLOAD_ROOT);
+  const normalizedTarget = path.resolve(targetPath);
+
+  if (normalizedTarget === normalizedRoot || normalizedTarget.startsWith(`${normalizedRoot}${path.sep}`)) {
+    return normalizedTarget;
+  }
+
+  return null;
+};
 
 const userCanAccessExpediente = async (
   userId: number,
@@ -114,11 +117,15 @@ const userCanAccessExpediente = async (
   }
 
   const [rows]: any = await pool.query(
-    `SELECT id FROM permisos_expediente WHERE usuario_id = ? AND expediente_id = ? AND ${permissionField} = 1 LIMIT 1`,
+    'SELECT puede_ver, puede_crear, puede_editar, puede_eliminar FROM permisos_expediente WHERE usuario_id = ? AND expediente_id = ? LIMIT 1',
     [userId, expedienteId]
   );
 
-  return rows.length > 0;
+  if (rows.length === 0) {
+    return false;
+  }
+
+  return Boolean(rows[0][permissionField]);
 };
 
 const uploadStorage = multer.diskStorage({
@@ -134,9 +141,20 @@ const uploadStorage = multer.diskStorage({
     const expedienteId = sanitizePathSegment(body.expediente_id || 'sin-expediente');
     const seccion = sanitizePathSegment(body.seccion || 'general');
 
-    const destinationPath = path.join(UPLOAD_ROOT, tipo, expedienteId, seccion);
-    fs.mkdirSync(destinationPath, { recursive: true });
-    cb(null, destinationPath);
+    if ([body.tipo, body.expediente_id, body.seccion].some((value) => String(value || '').includes('..'))) {
+      cb(new Error('Ruta de archivo inválida'), '');
+      return;
+    }
+
+    const destinationPath = path.resolve(UPLOAD_ROOT, tipo, expedienteId, seccion);
+    const safePath = ensureSafePath(destinationPath);
+    if (!safePath) {
+      cb(new Error('Ruta de archivo inválida'), '');
+      return;
+    }
+
+    fs.mkdirSync(safePath, { recursive: true });
+    cb(null, safePath);
   },
   filename: (
     _req: Request,
@@ -170,6 +188,62 @@ const upload = multer({
     return cb(null, true);
   },
 });
+
+const getCatalogQueries = (type: string) => {
+  const queries: Record<
+    string,
+    {
+      list: string;
+      create: string;
+      update: string;
+      getById: string;
+      remove: string;
+    }
+  > = {
+    'grupos-documentales': {
+      list: 'SELECT id, nombre, descripcion, estado FROM grupos_documentales ORDER BY nombre ASC',
+      create: 'INSERT INTO grupos_documentales (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)',
+      update:
+        'UPDATE grupos_documentales SET nombre = COALESCE(?, nombre), descripcion = COALESCE(?, descripcion), estado = COALESCE(?, estado) WHERE id = ?',
+      getById: 'SELECT id, nombre, descripcion, estado FROM grupos_documentales WHERE id = ?',
+      remove: 'DELETE FROM grupos_documentales WHERE id = ?',
+    },
+    'tipos-operacion': {
+      list: 'SELECT id, nombre, descripcion, estado FROM tipos_operacion ORDER BY nombre ASC',
+      create: 'INSERT INTO tipos_operacion (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)',
+      update:
+        'UPDATE tipos_operacion SET nombre = COALESCE(?, nombre), descripcion = COALESCE(?, descripcion), estado = COALESCE(?, estado) WHERE id = ?',
+      getById: 'SELECT id, nombre, descripcion, estado FROM tipos_operacion WHERE id = ?',
+      remove: 'DELETE FROM tipos_operacion WHERE id = ?',
+    },
+    'tipos-cliente': {
+      list: 'SELECT id, nombre, descripcion, estado FROM tipos_cliente ORDER BY nombre ASC',
+      create: 'INSERT INTO tipos_cliente (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)',
+      update:
+        'UPDATE tipos_cliente SET nombre = COALESCE(?, nombre), descripcion = COALESCE(?, descripcion), estado = COALESCE(?, estado) WHERE id = ?',
+      getById: 'SELECT id, nombre, descripcion, estado FROM tipos_cliente WHERE id = ?',
+      remove: 'DELETE FROM tipos_cliente WHERE id = ?',
+    },
+    'tipos-documentales': {
+      list: 'SELECT id, nombre, descripcion, estado FROM tipos_documentales ORDER BY nombre ASC',
+      create: 'INSERT INTO tipos_documentales (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)',
+      update:
+        'UPDATE tipos_documentales SET nombre = COALESCE(?, nombre), descripcion = COALESCE(?, descripcion), estado = COALESCE(?, estado) WHERE id = ?',
+      getById: 'SELECT id, nombre, descripcion, estado FROM tipos_documentales WHERE id = ?',
+      remove: 'DELETE FROM tipos_documentales WHERE id = ?',
+    },
+    secciones: {
+      list: 'SELECT id, nombre, descripcion, estado FROM secciones ORDER BY nombre ASC',
+      create: 'INSERT INTO secciones (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)',
+      update:
+        'UPDATE secciones SET nombre = COALESCE(?, nombre), descripcion = COALESCE(?, descripcion), estado = COALESCE(?, estado) WHERE id = ?',
+      getById: 'SELECT id, nombre, descripcion, estado FROM secciones WHERE id = ?',
+      remove: 'DELETE FROM secciones WHERE id = ?',
+    },
+  };
+
+  return queries[type];
+};
 
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'Server running', timestamp: new Date() });
@@ -468,12 +542,12 @@ app.put('/api/permisos-expediente/:id', authenticateToken, requireAdmin, async (
 
 app.get('/api/catalogos/:tipo', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const table = catalogTableByType[req.params.tipo];
-    if (!table) {
+    const queries = getCatalogQueries(req.params.tipo);
+    if (!queries) {
       return res.status(404).json({ error: 'Catálogo no encontrado' });
     }
 
-    const [rows]: any = await pool.query(`SELECT id, nombre, descripcion, estado FROM ${table} ORDER BY nombre ASC`);
+    const [rows]: any = await pool.query(queries.list);
     return res.json(rows);
   } catch (error) {
     console.error('Error fetching catalogo:', error);
@@ -483,8 +557,8 @@ app.get('/api/catalogos/:tipo', authenticateToken, async (req: AuthRequest, res:
 
 app.post('/api/catalogos/:tipo', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const table = catalogTableByType[req.params.tipo];
-    if (!table) {
+    const queries = getCatalogQueries(req.params.tipo);
+    if (!queries) {
       return res.status(404).json({ error: 'Catálogo no encontrado' });
     }
 
@@ -493,10 +567,7 @@ app.post('/api/catalogos/:tipo', authenticateToken, requireAdmin, async (req: Au
       return res.status(400).json({ error: 'nombre es obligatorio' });
     }
 
-    const [result]: any = await pool.query(
-      `INSERT INTO ${table} (nombre, descripcion, estado, created_by) VALUES (?, ?, ?, ?)`,
-      [nombre, descripcion, estado, req.user?.id || null]
-    );
+    const [result]: any = await pool.query(queries.create, [nombre, descripcion, estado, req.user?.id || null]);
 
     return res.status(201).json({ id: result.insertId, nombre, descripcion, estado });
   } catch (error) {
@@ -507,24 +578,17 @@ app.post('/api/catalogos/:tipo', authenticateToken, requireAdmin, async (req: Au
 
 app.put('/api/catalogos/:tipo/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const table = catalogTableByType[req.params.tipo];
-    if (!table) {
+    const queries = getCatalogQueries(req.params.tipo);
+    if (!queries) {
       return res.status(404).json({ error: 'Catálogo no encontrado' });
     }
 
     const { id } = req.params;
     const { nombre, descripcion, estado } = req.body;
 
-    await pool.query(
-      `UPDATE ${table}
-       SET nombre = COALESCE(?, nombre),
-           descripcion = COALESCE(?, descripcion),
-           estado = COALESCE(?, estado)
-       WHERE id = ?`,
-      [nombre, descripcion, estado, id]
-    );
+    await pool.query(queries.update, [nombre, descripcion, estado, id]);
 
-    const [rows]: any = await pool.query(`SELECT id, nombre, descripcion, estado FROM ${table} WHERE id = ?`, [id]);
+    const [rows]: any = await pool.query(queries.getById, [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Registro no encontrado' });
     }
@@ -538,13 +602,13 @@ app.put('/api/catalogos/:tipo/:id', authenticateToken, requireAdmin, async (req:
 
 app.delete('/api/catalogos/:tipo/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const table = catalogTableByType[req.params.tipo];
-    if (!table) {
+    const queries = getCatalogQueries(req.params.tipo);
+    if (!queries) {
       return res.status(404).json({ error: 'Catálogo no encontrado' });
     }
 
     const { id } = req.params;
-    await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+    await pool.query(queries.remove, [id]);
     return res.status(204).send();
   } catch (error) {
     console.error('Error deleting catalogo:', error);
