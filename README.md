@@ -245,6 +245,11 @@ Ver `backend/src/database/schema.sql` para detalles completos.
 - `documentos` - Documentos asociados
 - `auditoria` - Logs de cambios
 
+**Clasificaciones clave en expedientes:**
+- Operaciones celebradas: Proyecto, Convenio, Contrato
+- Servicios contables: Persona Jurídica, Persona Natural
+- Secciones de operación: Técnica, Financiera, Legal
+
 ---
 
 ## 🐛 Solución de Problemas

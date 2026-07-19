@@ -236,7 +236,7 @@ curl -X POST http://localhost:3000/api/expedientes \
 
 ## 📖 Rate Limiting
 
-Actualmente no implementado. Se recomienda añadir en producción.
+Los endpoints de autenticación (`/api/auth/login` y `/api/auth/register`) tienen límite de 20 intentos por IP cada 15 minutos.
 
 ---
 

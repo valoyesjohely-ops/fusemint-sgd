@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { rateLimit } from 'express-rate-limit';
 
 dotenv.config();
 
@@ -49,13 +50,21 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   });
 };
 
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Intenta nuevamente más tarde.' },
+});
+
 // Routes
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'Server running', timestamp: new Date() });
 });
 
 // Authentication Routes
-app.post('/api/auth/login', async (req: Request, res: Response) => {
+app.post('/api/auth/login', authRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, username, identifier, password } = req.body;
     const providedIdentifiers = [identifier, username, email]
@@ -115,7 +124,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', authRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, name, username } = req.body;
     const emailPrefix = typeof email === 'string' && email.includes('@')
