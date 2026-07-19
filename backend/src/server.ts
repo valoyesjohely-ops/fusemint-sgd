@@ -58,10 +58,18 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
     const { email, username, identifier, password } = req.body;
-    const loginIdentifier = (identifier || email || username || '').trim();
+    const providedIdentifiers = [identifier, username, email]
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      .map((value) => value.trim());
+    const uniqueIdentifiers = Array.from(new Set(providedIdentifiers));
+    const loginIdentifier = (identifier || username || email || '').trim();
 
     if (!loginIdentifier || !password) {
       return res.status(400).json({ error: 'Debe enviar usuario/correo y contraseña' });
+    }
+
+    if (uniqueIdentifiers.length > 1) {
+      return res.status(400).json({ error: 'Use un único identificador de acceso' });
     }
 
     const connection = await pool.getConnection();
@@ -120,6 +128,16 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
     }
 
     const connection = await pool.getConnection();
+
+    const [existingUsers]: any = await connection.query(
+      'SELECT id FROM usuarios WHERE email = ? OR username = ? LIMIT 1',
+      [email, normalizedUsername]
+    );
+
+    if (existingUsers.length > 0) {
+      connection.release();
+      return res.status(409).json({ error: 'El usuario o correo ya existe' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
