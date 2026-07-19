@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { rateLimit } from 'express-rate-limit';
 
 dotenv.config();
 
@@ -49,20 +50,43 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
   });
 };
 
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Intenta nuevamente más tarde.' },
+});
+
 // Routes
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'Server running', timestamp: new Date() });
 });
 
 // Authentication Routes
-app.post('/api/auth/login', async (req: Request, res: Response) => {
+app.post('/api/auth/login', authRateLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, identifier, password } = req.body;
+    const normalizedIdentifier = typeof identifier === 'string' ? identifier.trim() : '';
+    const normalizedUsername = typeof username === 'string' ? username.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim() : '';
+    const providedIdentifierValues = [normalizedIdentifier, normalizedUsername, normalizedEmail]
+      .filter((value) => value.length > 0);
+    const loginIdentifier = providedIdentifierValues[0] || '';
+
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ error: 'Debe enviar usuario/correo y contraseña' });
+    }
+
+    if (providedIdentifierValues.length > 1) {
+      return res.status(400).json({ error: 'Use un único identificador de acceso' });
+    }
+
     const connection = await pool.getConnection();
 
     const [users]: any = await connection.query(
-      'SELECT * FROM usuarios WHERE email = ?',
-      [email]
+      'SELECT * FROM usuarios WHERE email = ? OR username = ? LIMIT 1',
+      [loginIdentifier, loginIdentifier]
     );
 
     if (users.length === 0) {
@@ -101,16 +125,35 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', authRateLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, username } = req.body;
+    const emailPrefix = typeof email === 'string' && email.includes('@')
+      ? email.split('@')[0]
+      : '';
+    const normalizedUsername = (username || emailPrefix || '').trim();
+
+    if (!email || !password || !name || !normalizedUsername) {
+      return res.status(400).json({ error: 'Datos incompletos para registro' });
+    }
+
     const connection = await pool.getConnection();
+
+    const [existingUsers]: any = await connection.query(
+      'SELECT id FROM usuarios WHERE email = ? OR username = ? LIMIT 1',
+      [email, normalizedUsername]
+    );
+
+    if (existingUsers.length > 0) {
+      connection.release();
+      return res.status(409).json({ error: 'El usuario o correo ya existe' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await connection.query(
-      'INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, 'usuario']
+      'INSERT INTO usuarios (username, nombre, email, password, rol) VALUES (?, ?, ?, ?, ?)',
+      [normalizedUsername, name, email, hashedPassword, 'usuario']
     );
 
     const [users]: any = await connection.query(
