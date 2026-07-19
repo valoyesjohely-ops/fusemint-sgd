@@ -110,7 +110,10 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
     const { email, password, name, username } = req.body;
-    const normalizedUsername = (username || email?.split('@')[0] || '').trim();
+    const emailPrefix = typeof email === 'string' && email.includes('@')
+      ? email.split('@')[0]
+      : '';
+    const normalizedUsername = (username || emailPrefix || '').trim();
 
     if (!email || !password || !name || !normalizedUsername) {
       return res.status(400).json({ error: 'Datos incompletos para registro' });

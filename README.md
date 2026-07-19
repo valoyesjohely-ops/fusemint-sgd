@@ -200,6 +200,8 @@ fusemint-sgd/
 
 ## 📱 Credenciales de Prueba
 
+> ⚠️ Solo para desarrollo local. Cambia estas credenciales en cualquier entorno real.
+
 ```
 ┌─────────────────────┬────────────┬──────────┐
 │ Email               │ Password   │ Rol      │
