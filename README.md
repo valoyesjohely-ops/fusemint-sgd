@@ -25,7 +25,7 @@
 - 🟢 Diseño verde institucional (`#1B6D3B`)
 - 📱 Responsive (móvil, tablet, desktop)
 - 🔐 Autenticación JWT
-- 👤 Control de roles (admin, gestor, usuario)
+- 👤 Control de roles (admin, usuario)
 - 📄 Visor de documentos integrado
 - 🔍 Búsqueda en tiempo real
 - 📊 Dashboard con estadísticas
@@ -179,7 +179,7 @@ fusemint-sgd/
 ✅ **Tokens:** JWT con 24h expiration
 ✅ **Queries:** Parameterized para evitar SQL injection
 ✅ **CORS:** Configurado para localhost
-✅ **Roles:** Validación en backend y frontend
+✅ **Roles:** Validación en backend y frontend (Administrador/Usuario)
 
 ---
 
@@ -204,9 +204,8 @@ fusemint-sgd/
 ┌─────────────────────┬────────────┬──────────┐
 │ Email               │ Password   │ Rol      │
 ├─────────────────────┼────────────┼──────────┤
-│ admin@fusemint.org  │ admin123   │ admin    │
-│ juan@fusemint.org   │ admin123   │ gestor   │
-│ maria@fusemint.org  │ admin123   │ usuario  │
+│ admin@fusemint.org    │ admin123   │ admin    │
+│ usuario@fusemint.org  │ admin123   │ usuario  │
 └─────────────────────┴────────────┴──────────┘
 ```
 
@@ -238,6 +237,9 @@ Ver `backend/src/database/schema.sql` para detalles completos.
 **Tablas principales:**
 - `usuarios` - Usuarios del sistema
 - `expedientes` - Expedientes documentales
+- `grupos_documentales` - Catálogo de información general / operaciones / servicios
+- `tipos_operacion` - Proyecto / Convenio / Contrato
+- `tipos_cliente` - Persona Jurídica / Persona Natural
 - `documentos` - Documentos asociados
 - `auditoria` - Logs de cambios
 

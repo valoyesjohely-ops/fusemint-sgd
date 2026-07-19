@@ -57,12 +57,18 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Authentication Routes
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, identifier, password } = req.body;
+    const loginIdentifier = (identifier || email || username || '').trim();
+
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ error: 'Debe enviar usuario/correo y contraseña' });
+    }
+
     const connection = await pool.getConnection();
 
     const [users]: any = await connection.query(
-      'SELECT * FROM usuarios WHERE email = ?',
-      [email]
+      'SELECT * FROM usuarios WHERE email = ? OR username = ? LIMIT 1',
+      [loginIdentifier, loginIdentifier]
     );
 
     if (users.length === 0) {
@@ -103,14 +109,20 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 
 app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, username } = req.body;
+    const normalizedUsername = (username || email?.split('@')[0] || '').trim();
+
+    if (!email || !password || !name || !normalizedUsername) {
+      return res.status(400).json({ error: 'Datos incompletos para registro' });
+    }
+
     const connection = await pool.getConnection();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await connection.query(
-      'INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, 'usuario']
+      'INSERT INTO usuarios (username, nombre, email, password, rol) VALUES (?, ?, ?, ?, ?)',
+      [normalizedUsername, name, email, hashedPassword, 'usuario']
     );
 
     const [users]: any = await connection.query(

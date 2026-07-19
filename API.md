@@ -14,10 +14,12 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "email": "admin@fusemint.org",
+  "identifier": "admin@fusemint.org",
   "password": "admin123"
 }
 ```
+
+`identifier` acepta correo o nombre de usuario (`username`).
 
 **Response (200):**
 ```json
